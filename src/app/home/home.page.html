@@ -1,20 +1,161 @@
 <ion-header [translucent]="true">
-  <ion-toolbar>
+  <ion-toolbar color="secondary">
     <ion-title>
-      Blank
+      Exam Mark
     </ion-title>
   </ion-toolbar>
 </ion-header>
 
 <ion-content [fullscreen]="true">
-  <ion-header collapse="condense">
-    <ion-toolbar>
-      <ion-title size="large">Blank</ion-title>
-    </ion-toolbar>
-  </ion-header>
+  <ion-grid>
 
-  <div id="container">
-    <strong>Ready to create an app?</strong>
-    <p>Start with Ionic <a target="_blank" rel="noopener noreferrer" href="https://ionicframework.com/docs/components">UI Components</a></p>
-  </div>
+    <!-- Semester records -->
+    <ion-row>
+      <ion-col sizeSm="8" offsetSm="2" sizeMd="6" offsetMd="3">
+        <ion-card *ngIf="averageCheck">
+          <ion-card-header>
+            <ion-card-title>Semester Information</ion-card-title>
+          </ion-card-header>
+          <ion-card-content>
+
+            <ion-grid>
+              <ion-row>
+                <ion-col>
+                  <ion-card-subtitle>
+                    Semester 1: <b color="primary">{{ average1.toFixed(2) }}</b>
+                  </ion-card-subtitle>
+                  <ion-card-subtitle>
+                    Semester 2: <b color="primary">{{ average2.toFixed(2) }}</b>
+                  </ion-card-subtitle>
+                </ion-col>
+                <ion-col>
+                  <ion-card-subtitle class="ion-text-end">
+                    Average: <b color="success">{{ average.toFixed(2) }}</b>
+                  </ion-card-subtitle>
+                </ion-col>
+              </ion-row>
+            </ion-grid>
+          </ion-card-content>
+
+        </ion-card>
+        <ion-card *ngIf="!averageCheck">
+          <ion-card-content>
+            <ion-grid>
+              <ion-row>
+                <ion-col>
+                  <ion-card-subtitle>
+                    <ion-button (click)="calculateAverages()">
+                      Calculate Average
+                    </ion-button>
+                  </ion-card-subtitle>
+                </ion-col>
+              </ion-row>
+            </ion-grid>
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+    </ion-row>
+    <ion-row>
+      <ion-col sizeSm="8" offsetSm="2" sizeMd="6" offsetMd="3">
+        <ion-card *ngIf="addable">
+          <ion-card-header>
+            <ion-card-title>Add Mark</ion-card-title>
+          </ion-card-header>
+          <ion-card-content>
+            <form [formGroup]="examForm" (ngSubmit)="saveExam()">
+              <ion-list>
+                <ion-item>
+                  <ion-label position="floating">Score</ion-label>
+                  <ion-input placeholder="Score" formControlName="score" type="number"></ion-input>
+                </ion-item>
+                <ion-item>
+                  <ion-label position="floating">Course</ion-label>
+                  <ion-input placeholder="Course" formControlName="course"></ion-input>
+                </ion-item>
+              </ion-list>
+              <div class="ion-margin-vertical">
+                <ion-button (click)="selectSemester(1)" [color]="selectedSemester === 1 ? 'medium' : 'light'">
+                  Semester 1
+                </ion-button>
+                <ion-button (click)="selectSemester(2)" [color]="selectedSemester === 2 ? 'medium' : 'light'">
+                  Semester 2
+                </ion-button>
+              </div>
+              <ion-button [color]="!examForm.valid ? 'dark' : 'success'" expand="block"
+                type="submit">Submit</ion-button>
+              <ion-button color="danger" expand="block" (click)="cancel()">Cancel</ion-button>
+            </form>
+          </ion-card-content>
+        </ion-card>
+        <ion-card *ngIf="editable && activeExam && indexed >=0">
+          <ion-card-header>
+            <ion-card-title>Edit Mark</ion-card-title>
+          </ion-card-header>
+          <ion-card-content>
+            <form [formGroup]="examForm" (ngSubmit)="updatedExam(indexed)">
+              <ion-list>
+                <ion-item>
+                  <ion-label position="floating">Score</ion-label>
+                  <ion-input placeholder="Score" formControlName="score" type="number"
+                    value="{{ activeExam.score }}"></ion-input>
+                </ion-item>
+                <ion-item>
+                  <ion-label position="floating">Course</ion-label>
+                  <ion-input placeholder="Course" formControlName="course" value="{{ activeExam.course }}"></ion-input>
+                </ion-item>
+              </ion-list>
+              <div class="ion-margin-vertical">
+                <ion-button (click)="selectSemester(1)" [color]="selectedSemester === 1 ? 'medium' : 'light'">
+                  Semester 1
+                </ion-button>
+                <ion-button (click)="selectSemester(2)" [color]="selectedSemester === 2 ? 'medium' : 'light'">
+                  Semester 2
+                </ion-button>
+              </div>
+              <ion-button [color]="!examForm.valid ? 'dark' : 'success'" expand="block"
+                type="submit">Submit</ion-button>
+              <ion-button color="danger" expand="block" (click)="cancel()">Cancel</ion-button>
+            </form>
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+    </ion-row>
+    <!-- List of Mark-->
+    <ion-row>
+      <ion-col sizeSm="8" offsetSm="2" sizeMd="6" offsetMd="3">
+        <ion-card>
+          <ion-card-header>
+            <ion-card-title>Marks</ion-card-title>
+          </ion-card-header>
+          <ion-card-content>
+            <div *ngIf="examService.getExams().length > 0">
+              <ion-list *ngFor="let exam of examService.getExams(); let i = index">
+                <ion-item-sliding>
+                  <ion-item-options side="start">
+                    <ion-item-option (click)="updateExam(i, exam)">Edit</ion-item-option>
+                  </ion-item-options>
+
+                  <ion-item>
+                    <ion-label>{{ exam.course }}</ion-label>
+                    <ion-label>{{ exam.score }}</ion-label>
+                    <ion-badge color="primary">Semester {{ exam.semester }}</ion-badge>
+                  </ion-item>
+
+                  <ion-item-options side="end">
+                    <ion-item-option color="danger" (click)="deleteExam(i)">Delete</ion-item-option>
+                  </ion-item-options>
+                </ion-item-sliding>
+
+              </ion-list>
+            </div>
+            <div *ngIf="examService.getExams().length === 0">
+              Please add a new mark
+            </div>
+
+            <ion-button fill="outline" (click)="goToExam()">New Mark</ion-button>
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+    </ion-row>
+  </ion-grid>
 </ion-content>
