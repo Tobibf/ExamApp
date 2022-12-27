@@ -3,4 +3,5 @@ export interface Exam {
     score: number;
     course: string;
     semester: number;
+    updated_at: Date;
   }

@@ -62,7 +62,7 @@
             <ion-card-title>Add Mark</ion-card-title>
           </ion-card-header>
           <ion-card-content>
-            <form [formGroup]="examForm" (ngSubmit)="saveExam()">
+            <form [formGroup]="examForm" (ngSubmit)="addExamStorage()">
               <ion-list>
                 <ion-item>
                   <ion-label position="floating">Score</ion-label>
@@ -92,7 +92,7 @@
             <ion-card-title>Edit Mark</ion-card-title>
           </ion-card-header>
           <ion-card-content>
-            <form [formGroup]="examForm" (ngSubmit)="updatedExam(indexed)">
+            <form [formGroup]="examForm" (ngSubmit)="updateExamStorage(indexed)">
               <ion-list>
                 <ion-item>
                   <ion-label position="floating">Score</ion-label>
@@ -128,11 +128,11 @@
             <ion-card-title>Marks</ion-card-title>
           </ion-card-header>
           <ion-card-content>
-            <div *ngIf="examService.getExams().length > 0">
-              <ion-list *ngFor="let exam of examService.getExams(); let i = index">
+            <div *ngIf="exams.length > 0">
+              <ion-list *ngFor="let exam of exams">
                 <ion-item-sliding>
                   <ion-item-options side="start">
-                    <ion-item-option (click)="updateExam(i, exam)">Edit</ion-item-option>
+                    <ion-item-option (click)="updateExam(exam)">Edit</ion-item-option>
                   </ion-item-options>
 
                   <ion-item>
@@ -142,13 +142,13 @@
                   </ion-item>
 
                   <ion-item-options side="end">
-                    <ion-item-option color="danger" (click)="deleteExam(i)">Delete</ion-item-option>
+                    <ion-item-option color="danger" (click)="deleteExamStorage(exam.id)">Delete</ion-item-option>
                   </ion-item-options>
                 </ion-item-sliding>
 
               </ion-list>
             </div>
-            <div *ngIf="examService.getExams().length === 0">
+            <div *ngIf="exams.length === 0">
               Please add a new mark
             </div>
 

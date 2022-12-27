@@ -1,8 +1,9 @@
-import { Component } from '@angular/core';
-import { ToastController } from '@ionic/angular';
-import { ExamService } from '../services/exam-service.service';
+import { Component, ViewChild } from '@angular/core';
+import { Platform, ToastController } from '@ionic/angular';
 import { Exam } from '../models/exam.model';
 import { FormBuilder, Validators } from '@angular/forms';
+import { StorageService } from '../services/storage.service';
+
 
 @Component({
   selector: 'app-home',
@@ -17,6 +18,10 @@ export class HomePage {
   activeExam: Exam | undefined;
   indexed: any;
 
+  exams: Exam[] = [];
+
+  // @ViewChild('myExam') myExam: List;
+
 
   averageCheck: boolean = false;
   numberCourses: number = 0;
@@ -28,16 +33,22 @@ export class HomePage {
   examForm = this.fb.group({
     score: [0, [Validators.required, Validators.min(0), Validators.max(20)]],
     course: ['', [Validators.required]],
-    semester: [0, [Validators.required, Validators.pattern("[1-2]")]]
+    semester: [0, [Validators.required, Validators.pattern("[1-2]")]],
   })
 
   selectedSemester = 0;
 
   constructor(
-    public examService: ExamService,
+
+    private storageService: StorageService,
+    private platform: Platform,
     private fb: FormBuilder,
     private toastController: ToastController,
-  ) { }
+  ) {
+    this.platform.ready().then(() => {
+      this.loadExams();
+    });
+  }
 
   ngOnInit() { }
 
@@ -47,13 +58,13 @@ export class HomePage {
   calculateAverages(): void {
     this.averageCheck = true;
     this.average = 0;
-    if (this.examService.getExams().length > 0) {
+    if (this.exams.length > 0) {
       let totalMark = 0;
       let totalMark1 = 0;
       let count1 = 0;
       let totalMark2 = 0;
       let count2 = 0;
-      for (let exam of this.examService.getExams()) {
+      for (let exam of this.exams) {
         totalMark += exam.score;
         if (exam.semester == 1) {
           totalMark1 += exam.score;
@@ -63,7 +74,7 @@ export class HomePage {
           count2++;
         }
       }
-      this.average = (totalMark / this.examService.getExams().length);
+      this.average = (totalMark / this.exams.length);
       this.average1 = 0;
       this.average2 = 0;
       if (count1 > 0) {
@@ -85,9 +96,9 @@ export class HomePage {
   }
 
   // Save Exam of List
-  saveExam(): void {
+  addExamStorage(): void {
+    console.log('Adding');
     if (this.examForm.valid) {
-      const id = this.examService.getExams.length;
       const score = this.examForm.get('score')?.value;
       const course = this.examForm.get('course')?.value;
       const semester = this.selectedSemester;
@@ -96,13 +107,18 @@ export class HomePage {
 
         // New Exam
         const newExam = {
-          id: id + 1,
+          id: Date.now(),
           score: score,
           course: course,
           semester: semester,
+          updated_at: new Date()
         }
-        //  Add to service list
-        this.examService.addExam(newExam);
+        console.log(newExam);
+        //  Add to Storage list
+        this.storageService.addExam(newExam).then(exam => {
+          this.presentToast('Exam added');
+          this.loadExams();
+        })
 
         // reset values
         this.examForm.reset();
@@ -119,37 +135,43 @@ export class HomePage {
   }
 
   // Allow to update of List
-  updateExam(index: number, exam: Exam): void {
+  updateExam(exam: Exam): void {
     this.editable = true;
     this.addable = false;
 
     this.activeExam = exam;
     this.selectedSemester = exam.semester;
-    this.indexed = index;
+    this.indexed = exam.id;
 
     this.examForm.patchValue({ course: exam.course, score: exam.score });
 
   }
 
   // Update Exam of List
-  updatedExam(index: number): void {
+  updateExamStorage(id: number): void {
     if (this.examForm.valid) {
-      const id = this.examService.getExams.length;
+
       const score = this.examForm.get('score')?.value;
       const course = this.examForm.get('course')?.value;
       const semester = this.examForm.get('semester')?.value;
+      const updated_at = new Date();
 
       if (score && semester && course) {
 
         // New Exam
         const newExam = {
-          id: id + 1,
+          id: id,
           score: score,
           course: course,
           semester: semester,
+          updated_at: updated_at
         }
-        //  Update to service list
-        this.examService.updateExam(index, newExam);
+        //  Update to storage list
+        this.storageService.updateExam(newExam).then(() => {
+          this.presentToast('Exam updated successfully');
+          // this.myExam.closeSlidingExams();
+          this.loadExams();
+        });
 
 
         // reset values
@@ -162,15 +184,16 @@ export class HomePage {
     else {
       this.presentToast("Please fill in the form correctly");
     }
+
   }
 
   // Delete Exam of List
-  deleteExam(index: number) {
-
-    this.examService.deleteExam(index);
-    this.addable = false;
-    this.editable = false;
-    this.averageCheck = false;
+  deleteExamStorage(id: number): void {
+    this.storageService.deleteExam(id).then(() => {
+      this.presentToast('Exam deleted successfully');
+      // this.myExam.closeSlidingExams();
+      this.loadExams();
+    })
   }
 
   // Cancel Exam adding or updating
@@ -191,10 +214,23 @@ export class HomePage {
     const toast = await this.toastController.create({
       message: message,
       position: "bottom",
-      duration: 3000
+      duration: 2000
     });
 
     toast.present();
   }
+
+
+  // Get list of Exam
+  loadExams(): void {
+    this.storageService.getExams().then(exams => {
+      this.exams = exams;
+    });
+  }
+
+
+
+
+
 
 }
