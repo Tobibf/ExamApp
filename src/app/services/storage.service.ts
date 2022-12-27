@@ -9,15 +9,9 @@ const EXAM_KEY = 'my-exams';
   providedIn: 'root'
 })
 export class StorageService {
-  examsList: Exam[] = [
-    // {
-    //   id: 2, score: 15, course: 'IA', semester: 2, updated_at: new Date
-    // }
-  ]; // all of the exam results
 
   constructor(private Storage: Storage) {
     this.Storage.create();
-    this.Storage.set(EXAM_KEY, this.examsList)
   }
 
   // Create new Exam in database

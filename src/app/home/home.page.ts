@@ -20,8 +20,6 @@ export class HomePage {
 
   exams: Exam[] = [];
 
-  // @ViewChild('myExam') myExam: List;
-
 
   averageCheck: boolean = false;
   numberCourses: number = 0;
@@ -39,7 +37,6 @@ export class HomePage {
   selectedSemester = 0;
 
   constructor(
-
     private storageService: StorageService,
     private platform: Platform,
     private fb: FormBuilder,
@@ -97,7 +94,6 @@ export class HomePage {
 
   // Save Exam of List
   addExamStorage(): void {
-    console.log('Adding');
     if (this.examForm.valid) {
       const score = this.examForm.get('score')?.value;
       const course = this.examForm.get('course')?.value;
@@ -113,9 +109,9 @@ export class HomePage {
           semester: semester,
           updated_at: new Date()
         }
-        console.log(newExam);
+
         //  Add to Storage list
-        this.storageService.addExam(newExam).then(exam => {
+        this.storageService.addExam(newExam).then(() => {
           this.presentToast('Exam added');
           this.loadExams();
         })
@@ -169,7 +165,6 @@ export class HomePage {
         //  Update to storage list
         this.storageService.updateExam(newExam).then(() => {
           this.presentToast('Exam updated successfully');
-          // this.myExam.closeSlidingExams();
           this.loadExams();
         });
 
@@ -191,9 +186,9 @@ export class HomePage {
   deleteExamStorage(id: number): void {
     this.storageService.deleteExam(id).then(() => {
       this.presentToast('Exam deleted successfully');
-      // this.myExam.closeSlidingExams();
       this.loadExams();
     })
+    this.cancel();
   }
 
   // Cancel Exam adding or updating
